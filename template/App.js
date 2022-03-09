@@ -60,7 +60,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      iapEnabled: false, // set TRUE if need in-app purchases
+      iapEnabled: true, // set TRUE if need in-app purchases
       contactsEnabled: false, //set TRUE if need native contacts
       isConnected: true,
       filePath: null,
