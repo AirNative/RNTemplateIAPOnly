@@ -2,7 +2,7 @@
   "name": "react-native-new-template",
   "version": "0.0.5",
   "description": "React Native Template",
-  "repository": "git@github.com:slimecube98/RNTemplateNoAnything.git",
+  "repository": "git@github.com:slimecube98/RNTemplateIAPOnly.git",
   "author": "Dmitrii Vasiliev <slimecube98@gmail.com>",
   "license": "MIT"
 }
