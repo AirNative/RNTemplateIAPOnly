@@ -127,6 +127,13 @@ class App extends Component {
       });
       this.render();
     });
+    setTimeout(() => {
+      OneSignal.getDeviceState().then(data => {
+        if (data.isSubscribed == false) {
+          OneSignal.addTrigger("prompt_ios", "true");
+        }
+      });
+    },5000);
   }
 
   componentWillUnmount() {
