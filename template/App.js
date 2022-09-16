@@ -291,12 +291,15 @@ class App extends Component {
   requestPurchase = async (sku, isSubscription) => {
     return await new Promise((resolve, reject) => {
       if (isSubscription) {
-        RNIap.getSubscriptions([sku])
+        RNIap.getSubscriptions({skus: [sku.trim()]})
           .then(subscriptionList => {
             if (subscriptionList.length === 0) {
               throw new Error('This subscription not found');
             }
-            RNIap.requestPurchase(sku, false)
+            RNIap.requestSubscription({
+              sku: sku.trim(),
+              subscriptionOffers: [{sku: sku.trim(), offerToken: subscriptionList[0].subscriptionOfferDetails[0].offerToken}]
+            })
               .then(
                 transactionSuccess => {
                   resolve(transactionSuccess);
@@ -319,7 +322,7 @@ class App extends Component {
             if (productsList.length === 0) {
               throw new Error('This product not found');
             }
-            RNIap.requestPurchase(sku, false)
+            RNIap.requestPurchase({sku: sku.trim()})
               .then(
                 transactionSuccess => {
                   resolve(transactionSuccess);
