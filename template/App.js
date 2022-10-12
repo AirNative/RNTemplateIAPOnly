@@ -315,72 +315,81 @@ class App extends Component {
   };
 
   requestPurchase = async (sku, isSubscription) => {
-    return await new Promise((resolve, reject) => {
-      if (isSubscription) {
-        RNIap.getSubscriptions({skus: [sku.trim()]})
-          .then(subscriptionList => {
-            if (subscriptionList.length === 0) {
-              throw new Error('This subscription not found');
-            }
-            const purchaseObj =
-              Platform.OS === "android"
-                ? {
-                    sku: sku.trim(),
-                    subscriptionOffers: [
-                      {
-                        sku: sku.trim(),
-                        offerToken:
-                          subscriptionList[0].subscriptionOfferDetails[0]
-                            .offerToken,
-                      },
-                    ],
-                  }
-                : {
-                    sku: sku.trim(),
-                  };
-            RNIap.requestSubscription(purchaseObj)
-              .then(
-                transactionSuccess => {
-                  resolve(transactionSuccess);
-                },
-                transactionFailed => {
-                  throw new Error(transactionFailed.message);
-                },
-              )
-              .catch(transactionError => {
-                reject('Error in transaction: ' + transactionError.message);
-              });
-          })
-          .catch(fetchError => {
-            Alert.alert('Purchase error', fetchError.message);
-            reject('Purchase error: ' + fetchError.message);
-          });
-      } else {
-        RNIap.getProducts({ skus: [sku.trim()] })
-          .then(productsList => {
-            if (productsList.length === 0) {
-              throw new Error('This product not found');
-            }
-            RNIap.requestPurchase({ sku: sku.trim() })
-              .then(
-                transactionSuccess => {
-                  resolve(transactionSuccess);
-                },
-                transactionFailed => {
-                  throw new Error(transactionFailed.message);
-                },
-              )
-              .catch(transactionError => {
-                reject('Error in transaction: ' + transactionError.message);
-              });
-          })
-          .catch(fetchError => {
-            Alert.alert('Purchase error', fetchError.message);
-            reject('Purchase error: ' + fetchError.message);
-          });
+    return await new Promise( (resolve, reject) => {
+      
+      const listener =  RNIap.purchaseUpdatedListener(event => {
+        listener.remove()
+        if (!event.transactionId) {
+          console.error('Transaction failed')
+          reject('Transaction failed')
+        }
+
+        resolve(event)
+      })
+
+      try {
+
+        if (isSubscription) {
+          RNIap.getSubscriptions({skus: [sku.trim()]})
+            .then(subscriptionList => {
+              if (subscriptionList.length === 0) {
+                throw new Error('This subscription not found');
+              }
+  
+              const purchaseObj =
+                Platform.OS === "android"
+                  ? {
+                      sku: sku.trim(),
+                      subscriptionOffers: [
+                        {
+                          sku: sku.trim(),
+                          offerToken:
+                            subscriptionList[0].subscriptionOfferDetails[0]
+                              .offerToken,
+                        },
+                      ],
+                    }
+                  : {
+                      sku: sku.trim(),
+                    };
+  
+  
+              RNIap.requestSubscription(purchaseObj)
+                .catch(transactionError => {
+                  throw new Error('Error in transaction: ' + transactionError.message);
+                });
+            })
+            .catch(fetchError => {
+              listener.remove()
+              reject('Purchase error: ' + fetchError.message);
+  
+            });
+        } else {
+          RNIap.getProducts({ skus: [sku.trim()] })
+            .then(productsList => {
+              if (productsList.length === 0) {
+                throw new Error('This product not found');
+              }
+              RNIap.requestPurchase({ sku: sku.trim() })
+                .catch(transactionError => {
+                  listener.remove()
+                  reject('Error in transaction: ' + transactionError.message);
+                });
+            })
+            .catch(fetchError => {
+              listener.remove()
+              reject('Purchase error: ' + fetchError.message);
+            });
+        }
+
+
+      } catch (error) {
+        listener.remove()
+        console.error('requestPurchase error: ', error)
+        reject('Purchase error: ' + error.message)
       }
-    });
-  };
+    })
+  }
   /** Deprecated */
   getAllProducts = async () => {
     var listOfProducts = [];
